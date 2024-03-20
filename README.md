@@ -4,6 +4,20 @@
 
 ![Architecture Diagram](images/assessment_diagram.jpg)
 
+## Git Folder Structure:
+1. docker-build-pipeline - Pipeline used to create docker images
+2. helm-chart-deployment-pipeline - Pipeline used to deploy helm chart
+3. infra-deployment-pipeline - Pipeline used to deploy infra using Terraform
+4. images - folder contains architecture diagram and post-deployment screenshots.
+5. docs - Word document of the deployment.
+
+Each folder contains a separate README file.
+
+## Components Used:
+- GitLab pipeline
+- Terraform for Infrastructure as Code
+- AWS for infrastructure
+
 ## Infrastructure Components:
 
 ### Amazon VPC (Virtual Private Cloud):

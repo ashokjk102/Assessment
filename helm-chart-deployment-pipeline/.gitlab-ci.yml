@@ -1,0 +1,74 @@
+stages:
+  - print_parameters
+  - deploy_infra
+  - remove_workspace
+
+variables:
+    HELM_CHART_PATH: $CI_PROJECT_DIR/helmchart
+    HELM_DEPLOY_MODE:
+        value: ""
+        description: "Choose 'install' for regular deployment or 'dry-run' to simulate without changes."
+    REGION:
+        value: ""
+        description: "Provide the name of the Amazon Region, for example:ap-south."
+    EKS_NAME:
+        value: ""
+        description: "Provide the name of the Amazon EKS cluster to deploy the Helm chart."
+    HELM_RELEASE_NAME:
+        value: ""
+        description: "Enter the Helm release name"
+    HELM_NAMESPACE:
+        value: ""
+        description: "Enter the Helm namespace"
+    REGISTRY_IMAGE:
+        value: ""
+        description: "Provide the ECR repository URI"
+    APPSERVER_REPO:
+        value: ""
+        description: "Provide the repository name for the app server"
+    APPSERVER_TAG:
+        value: ""
+        description: "Provide the tag for the app server repository"
+    WEBSERVER_REPO:
+        value: ""
+        description: "Provide the repository name for the web server"
+    WEBSERVER_TAG:
+        value: ""
+        description: "Provide the tag for the web server repository"
+    DBSERVER_REPO:
+        value: ""
+        description: "Provide the repository name for the database server"
+    DBSERVER_TAG:
+        value: ""
+        description: "Provide the tag for the database server repository"
+    
+print_parameters:
+    stage: print_parameters
+    script:
+        - echo "Build Parameters"
+        - echo "REGION:" "$REGION"
+        - echo "EKS_NAME:" "$EKS_NAME"
+        - echo "HELM_RELEASE_NAME:" "$HELM_RELEASE_NAME"
+        - echo "HELM_NAMESPACE:" "$HELM_NAMESPACE"
+        - echo "REGISTRY_IMAGE:" "$REGISTRY_IMAGE"
+        - echo "APPSERVER_REPO:" "$APPSERVER_REPO"
+        - echo "APPSERVER_TAG:" "$APPSERVER_TAG"
+        - echo "WEBSERVER_REPO:" "$WEBSERVER_REPO"
+        - echo "WEBSERVER_TAG:" "$WEBSERVER_TAG"
+        - echo "DBSERVER_REPO:" "$DBSERVER_REPO"
+        - echo "DBSERVER_TAG:" "$DBSERVER_TAG"
+
+deploy_infra:
+  stage: deploy_infra
+  script:
+    - echo "Authenticating with Amazon EKS..."
+    - aws eks --region $REGION update-kubeconfig --name $EKS_NAME
+    - echo "Deploying Helm chart..."
+    - if [ "$HELM_DEPLOY_MODE" == "dry-run" ]; then helm upgrade --install $HELM_RELEASE_NAME $HELM_CHART_PATH --namespace $HELM_NAMESPACE --create-namespace --set imageCredentials.registry=$REGISTRY_IMAGE --set images.appserver.repository=$APPSERVER_REPO --set images.appserver.tag=$APPSERVER_TAG --set images.webserver.repository=$WEBSERVER_REPO --set images.webserver.tag=$WEBSERVER_TAG --set images.dbserver.repository=$DBSERVER_REPO --set images.dbserver.tag=$DBSERVER_TAG --dry-run; fi
+    - if [ "$HELM_DEPLOY_MODE" == "install" ]; then helm upgrade --install $HELM_RELEASE_NAME $HELM_CHART_PATH --namespace $HELM_NAMESPACE --create-namespace --set imageCredentials.registry=$REGISTRY_IMAGE --set images.appserver.repository=$APPSERVER_REPO --set images.appserver.tag=$APPSERVER_TAG --set images.webserver.repository=$WEBSERVER_REPO --set images.webserver.tag=$WEBSERVER_TAG --set images.dbserver.repository=$DBSERVER_REPO --set images.dbserver.tag=$DBSERVER_TAG; fi
+
+remove_workspace:
+    stage: remove_workspace
+    script:
+        - rm -rf $WORKSPACE
+        - rm -rf $GIT_CLONE_PATH

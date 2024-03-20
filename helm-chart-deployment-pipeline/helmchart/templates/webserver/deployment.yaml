@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "web-server-name" . }}
+spec:
+  replicas: {{ .Values.webServer.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "web-server-label" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "web-server-label" . }}
+    spec:
+      serviceAccountName: {{ include "webserver-sa" . }}
+      containers:
+      - name: {{ include "web-server-container-name" . }}
+        image: {{ include "web-server-image" . }}
+        imagePullPolicy: {{ include "web-server-image-pull-policy" . }}
+        ports:
+        - containerPort: {{ .Values.webServer.containerPort }}
+        securityContext:
+          runAsNonRoot: {{ .Values.securityContext.podSecurityContext.runAsNonRoot }}
+          runAsUser:  {{ .Values.securityContext.podSecurityContext.runAsUser }}
+      volumes:
+      - name: web-content
+        persistentVolumeClaim:
+          claimName: webserver-pvc
+

@@ -1,0 +1,38 @@
+stages:
+  - print_parameters
+  - deploy_infra
+  - remove_workspace
+
+variables:
+    SCRIPTS_DIR: $CI_PROJECT_DIR/scripts
+    DEPLOY_TYPE:
+        value: ""
+        description: "Choose deployment type (plan/apply/destroy):"
+    MODULE:
+        value: ""
+        description: "Enter module name (vpc,eks,ecr,efs)"
+    
+print_parameters:
+    stage: print_parameters
+    script:
+        - echo "Build Parameters"
+        - echo "DEPLOY_TYPE:" "$DEPLOY_TYPE"
+        - echo "MODULE:" "$MODULE"
+
+  
+deploy_infra:
+  stage: deploy_infra
+  script:
+    - cd $SCRIPTS_DIR
+    - ls -lrt
+    - terraform init
+    - if [ "$DEPLOY_TYPE" == "plan" ]; then terraform plan -compact-warnings -no-color -target=module.$MODULE; fi
+    - if [ "$DEPLOY_TYPE" == "apply" ]; then terraform apply -compact-warnings -no-color -target=module.$MODULE -auto-approve; fi
+    - if [ "$DEPLOY_TYPE" == "destroy" ]; then terraform plan -destroy -compact-warnings -no-color -target=module.$MODULE -auto-approve; fi
+
+
+remove_workspace:
+    stage: remove_workspace
+    script:
+        - rm -rf $WORKSPACE
+        - rm -rf $GIT_CLONE_PATH

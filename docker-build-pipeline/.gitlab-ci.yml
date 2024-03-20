@@ -1,0 +1,50 @@
+stages:
+  - print_parameters
+  - build_image
+  - remove_workspace
+
+variables:
+    AWS_DEFAULT_REGION:
+        value: "ap-south-1"
+        description: "Provide ECR Region"
+    CI_REGISTRY_IMAGE:
+        value: "00000000.dkr.ecr.ap-south-1.amazonaws.com"
+        description: "Provide ECR repo Registry URI"
+    IMAGE_NAME_PREFIX:
+        value: "assessment"
+        description: "Provide Image Prefix"
+    BUILD_TYPE:
+        value: ""
+        description: "Available Build_Type - appserver,webserver,dbserver"
+    
+print_parameters:
+    stage: print_parameters
+    script:
+        - echo "Build Parameters"
+        - echo "AWS_DEFAULT_REGION:" "$AWS_DEFAULT_REGION"
+        - echo "CI_REGISTRY_IMAGE:" "$CI_REGISTRY_IMAGE"
+        - echo "IMAGE_NAME_PREFIX:" "$IMAGE_NAME_PREFIX"
+        - echo "BUILD_TYPE:" "$BUILD_TYPE"
+
+before_script:
+  - if aws ecr describe-repositories --repository-names $IMAGE_NAME_PREFIX-$BUILD_TYPE 2>/dev/null; then echo "ECR repository already exists."; else aws ecr create-repository --repository-name $IMAGE_NAME_PREFIX-$BUILD_TYPE; fi
+  - echo "Logging in to ECR"
+  - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $CI_REGISTRY_IMAGE
+  - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $CI_REGISTRY_IMAGE
+  
+build_image:
+  stage: build_image
+  script:
+    - if [ "$BUILD_TYPE" == "webserver" ]; then docker build -t $CI_REGISTRY_IMAGE/$IMAGE_NAME_PREFIX-webserver:$CI_COMMIT_REF_NAME ./docker/webserver; fi
+
+    - if [ "$BUILD_TYPE" == "appserver" ]; then docker build -t $CI_REGISTRY_IMAGE/$IMAGE_NAME_PREFIX-appserver:$CI_COMMIT_REF_NAME ./docker/appserver; fi
+    - if [ "$BUILD_TYPE" == "dbserver" ]; then docker build -t $CI_REGISTRY_IMAGE/$IMAGE_NAME_PREFIX-dbserver:$CI_COMMIT_REF_NAME ./docker/dbserver; fi
+
+    - docker push $CI_REGISTRY_IMAGE/$IMAGE_NAME_PREFIX-$BUILD_TYPE:$CI_COMMIT_REF_NAME
+
+
+remove_workspace:
+    stage: remove_workspace
+    script:
+        - rm -rf $WORKSPACE
+        - rm -rf $GIT_CLONE_PATH

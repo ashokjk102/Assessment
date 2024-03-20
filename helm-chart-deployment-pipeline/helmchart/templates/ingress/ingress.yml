@@ -1,0 +1,35 @@
+# ingress/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ingress-name" . }}
+spec:
+  rules:
+  - host: {{ include "ingress-host" . }}
+    http:
+      paths:
+      - path: /web
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "web-server-service-name" . }}
+            port:
+              number: 80
+      - path: /app
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "app-server-service-name" . }}
+            port:
+              number: 8080
+      - path: /db
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "db-server-service-name" . }}
+            port:
+              number: 3306
+  tls:
+  - hosts:
+    - {{ include "ingress-host" . }}
+    secretName: {{ include "ingress-tls-secret-name" . }}

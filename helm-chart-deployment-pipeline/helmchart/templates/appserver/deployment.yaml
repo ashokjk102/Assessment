@@ -1,0 +1,31 @@
+# app-server/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app-server-name" . }}
+spec:
+  replicas: {{ .Values.appServer.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "app-server-label" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "app-server-label" . }}
+    spec:
+      serviceAccountName: {{ include "appserver-sa" . }}
+      containers:
+      - name: {{ include "app-server-container-name" . }}
+        image: {{ include "app-server-image" . }}
+        imagePullPolicy: {{ include "app-server-image-pull-policy" . }}
+        ports:
+        - containerPort: {{ .Values.appServer.containerPort }}
+        securityContext:
+          runAsNonRoot: {{ .Values.securityContext.podSecurityContext.runAsNonRoot }}
+          runAsUser:  {{ .Values.securityContext.podSecurityContext.runAsUser }}
+
+      volumes:
+      - name: {{ include "app-server-pv-name" . }}
+        persistentVolumeClaim:
+          claimName: {{ include "app-server-pvc-name" . }}
+

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "db-server-name" . }}
+spec:
+  replicas: {{ .Values.dbServer.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "db-server-label" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "db-server-label" . }}
+    spec:
+      serviceAccountName: {{ include "dbserver-sa" . }}
+      containers:
+      - name: {{ include "db-server-container-name" . }}
+        image: {{ include "db-server-image" . }}
+        imagePullPolicy: {{ include "db-server-image-pull-policy" . }}
+        volumeMounts:
+            - name: {{ include "db-server-pv-name" . }}
+              mountPath: /data/db
+        ports:
+        - containerPort: {{ .Values.dbServer.containerPort }}
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-server-secret
+              key: rootPassword
+        securityContext:
+          runAsNonRoot: {{ .Values.securityContext.podSecurityContext.runAsNonRoot }}
+          runAsUser:  {{ .Values.securityContext.podSecurityContext.runAsUser }}
+      volumes:
+      - name: {{ include "db-server-pv-name" . }}
+        persistentVolumeClaim:
+          claimName: {{ include "db-server-pvc-name" . }}
+

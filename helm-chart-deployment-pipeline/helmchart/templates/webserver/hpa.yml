@@ -1,0 +1,13 @@
+# hpa.yaml
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "web-server-name" . }}-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "web-server-name" . }}
+  minReplicas: {{ .Values.webServer.minReplicas }}
+  maxReplicas: {{ .Values.webServer.maxReplicas }}
+  targetCPUUtilizationPercentage: {{ .Values.webServer.targetCPUUtilizationPercentage }}

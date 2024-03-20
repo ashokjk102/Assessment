@@ -1,0 +1,126 @@
+# Default values for helmchart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+imageCredentials:
+  registry: 0000000000.dkr.ecr.ap-south-1.amazonaws.com/
+  username:
+  password:
+
+images:
+  appserver:
+    repository: "coding-assessment"
+    tag: "appserver"
+    pullPolicy: IfNotPresent
+  webserver:
+    repository: "coding-assessment"
+    tag: "webserver"
+    pullPolicy: IfNotPresent
+  dbserver:
+    repository: "coding-assessment"
+    tag: "dbserver"
+    pullPolicy: IfNotPresent
+
+webServer:
+  name: "webserver"
+  RoleName: "webserver-role"
+  RoleBindingName: "webserver-binding"
+  PvName: "webserver-pv"
+  PvcName: "webserver-pvc"
+  containerPort: 80
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
+  label:
+    app: "webserver"
+
+appServer:
+  name: "appserver"
+  RoleName: "appserver-role"
+  RoleBindingName: "appserver-binding"
+  PvName: "appserver-pv"
+  PvcName: "appserver-pvc"
+  replicas: "1"
+  containerPort: 80
+  label:
+    app: "appserver"
+
+dbServer:
+  name: "dbserver"
+  RoleName: "dbserver-role"
+  RoleBindingName: "dbserver-binding"
+  PvName: "dbserver-pv"
+  PvcName: "dbserver-pvc"
+  replicas: "1"
+  containerPort: 3306
+  rootPassword: "MTIzNA=="
+  label:
+    app: "dbserver"
+
+storage:
+  fileSystemId: "fs-036c880f0973b8c43"
+  storageClassName: "efs"
+
+serviceAccount:
+  create: false
+  annotations: {}
+  webserverSaName: "web-server-sa"
+  appserverSaName: "app-server-sa"
+  dbserverSaName: "db-server-sa"
+
+podAnnotations: {}
+
+securityContext:
+  podSecurityContext:
+    runAsUser: 10001
+    fsGroup: 10001
+    runAsNonRoot: true
+  containerSecurityContext: {}
+
+service:
+  appServer:
+    name: "app-server-service"
+    type: ClusterIP
+    port: 80
+    targetPort: 8080
+
+  webServer: 
+    name: "web-server-service"
+    type: LoadBalancer
+    port: 80
+    targetPort: 8080
+
+  dbServer:
+    name: "db-server-service"
+    type: ClusterIP
+    port: 3306
+    targetPort: 8080
+
+ingress:
+  name: "ingress"
+  enabled: true
+  className: ""
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  hosts:
+    - host: "example.com"
+      paths:
+        - path: /web
+          pathType: Prefix
+        - path: /app
+          pathType: Prefix
+        - path: /db
+          pathType: Prefix
+  tls:
+    - secretName: acm-certificate-arn
+      hosts:
+        - testdomain.com
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

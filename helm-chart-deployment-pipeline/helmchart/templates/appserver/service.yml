@@ -1,0 +1,15 @@
+# app-server/service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "app-server-service-name" . }}
+spec:
+  selector:
+    app: {{ include "app-server-label" . }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.service.appServer.port }}
+      targetPort: {{ .Values.service.appServer.targetPort }}
+  type: {{ .Values.service.appServer.type }}
+

@@ -1,0 +1,14 @@
+# web-server/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "app-server-pvc-name" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{ if eq .Values.storage.storageClassName "efs" }}
+  storageClassName: {{ .Values.storage.storageClassName }}
+  {{ end }}
+  resources:
+    requests:
+      storage: 1Gi

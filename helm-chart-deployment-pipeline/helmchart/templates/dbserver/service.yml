@@ -1,0 +1,14 @@
+# database-server/service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "db-server-service-name" . }}
+spec:
+  selector:
+    app: {{ include "db-server-label" . }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.service.dbServer.port }}
+      targetPort: {{ .Values.service.dbServer.targetPort }}
+  type: {{ .Values.service.dbServer.type }}

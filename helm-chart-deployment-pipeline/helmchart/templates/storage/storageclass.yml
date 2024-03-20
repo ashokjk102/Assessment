@@ -1,0 +1,16 @@
+{{ if eq .Values.storage.storageClassName "efs" }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.storage.storageClassName }}
+provisioner: efs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+parameters:
+  fileSystemId: {{ .Values.storage.fileSystemId }}
+  provisioningMode: efs-ap
+  directoryPerms: "700"
+  gidRangeStart: "1000"
+  gidRangeEnd: "2000"
+  basePath: "/data/web"
+{{ end }}
